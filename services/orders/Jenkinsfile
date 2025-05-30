@@ -1,0 +1,20 @@
+@Library('ci-lib') _
+
+pipeline {
+    agent any
+
+    stages {
+        stage('Security Scan') {
+            steps {
+                script {
+                    scanWithTrivy(
+                        image: 'your-ecr/image:tag',
+                        failOnVuln: true,
+                        archiveReport: true,
+                        sbom: true
+                    )
+                }
+            }
+        }
+    }
+}
