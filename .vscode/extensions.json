@@ -1,0 +1,10 @@
+{
+    "recommendations": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-azuretools.vscode-docker",
+        "batisteo.vscode-django",
+        "ms-toolsai.jupyter",
+        "matangover.mypy"
+    ]
+}

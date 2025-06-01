@@ -1,0 +1,39 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+.env/
+.venv/
+
+# VSCode settings
+.vscode/
+
+# Unit test / coverage
+.coverage
+coverage.xml
+htmlcov/
+.junit.xml
+results.xml
+
+# Python test cache
+.pytest_cache/
+nosetests.xml
+
+# Log files
+*.log
+
+# Dependency lock files (if not using)
+Pipfile.lock
+poetry.lock
+
+# Docker artifacts
+*.tar
+*.img
+
+# macOS
+.DS_Store
+
+.git*

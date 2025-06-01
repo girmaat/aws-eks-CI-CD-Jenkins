@@ -1,18 +1,36 @@
-@Library('ci-lib') _
+@Library('ci-lib') _  // Shared Jenkins Shared Library
 
 pipeline {
     agent any
 
     environment {
-        IMAGE = 'your-ecr/image:tag'
+        AWS_REGION = 'us-east-1'
+        AWS_ACCOUNT_ID = '443370713928'
+        ECR_REPO = 'services/orders'
+        COMMIT_HASH = "${env.GIT_COMMIT ?: 'dev'}"
+        IMAGE_TAG = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}:${COMMIT_HASH}"
     }
 
     stages {
-        stage('Security Scan') {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Build Image') {
+            steps {
+                dir('services/orders') {
+                    sh "docker build -t ${IMAGE_TAG} ."
+                }
+            }
+        }
+
+        stage('Trivy Scan') {
             steps {
                 script {
                     scanWithTrivy(
-                        image: "${env.IMAGE}",
+                        image: "${IMAGE_TAG}",
                         failOnVuln: true,
                         archiveReport: true,
                         sbom: true
@@ -21,7 +39,19 @@ pipeline {
             }
         }
 
-        stage('Unit Test') {
+        stage('Push to ECR') {
+            steps {
+                script {
+                    pushToECR(
+                        region: "${AWS_REGION}",
+                        image: "${IMAGE_TAG}",
+                        accountId: "${AWS_ACCOUNT_ID}"
+                    )
+                }
+            }
+        }
+
+        stage('Install & Test') {
             steps {
                 dir('services/orders') {
                     sh '''
@@ -29,12 +59,31 @@ pipeline {
                         . venv/bin/activate
                         pip install --upgrade pip
                         pip install -r requirements.txt
-                        pip install pytest
-                        pytest tests > pytest-report.txt
+                        pytest --junitxml=pytest-report.xml --cov=app --cov-report=xml:coverage.xml
                     '''
-                    archiveArtifacts artifacts: 'pytest-report.txt', fingerprint: true
                 }
             }
+        }
+
+        stage('Archive Reports') {
+            steps {
+                dir('services/orders') {
+                    archiveArtifacts artifacts: 'pytest-report.xml', fingerprint: true
+                    archiveArtifacts artifacts: 'coverage.xml', fingerprint: true
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            echo 'CI/CD process completed.'
+        }
+        success {
+            echo "Build & Push succeeded for image: ${IMAGE_TAG}"
+        }
+        failure {
+            echo "Pipeline failed. Check logs above."
         }
     }
 }
