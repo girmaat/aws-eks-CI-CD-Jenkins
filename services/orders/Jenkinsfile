@@ -3,16 +3,36 @@
 pipeline {
     agent any
 
+    environment {
+        IMAGE = 'your-ecr/image:tag'
+    }
+
     stages {
         stage('Security Scan') {
             steps {
                 script {
                     scanWithTrivy(
-                        image: 'your-ecr/image:tag',
+                        image: "${env.IMAGE}",
                         failOnVuln: true,
                         archiveReport: true,
                         sbom: true
                     )
+                }
+            }
+        }
+
+        stage('Unit Test') {
+            steps {
+                dir('services/orders') {
+                    sh '''
+                        python3 -m venv venv
+                        . venv/bin/activate
+                        pip install --upgrade pip
+                        pip install -r requirements.txt
+                        pip install pytest
+                        pytest tests > pytest-report.txt
+                    '''
+                    archiveArtifacts artifacts: 'pytest-report.txt', fingerprint: true
                 }
             }
         }
