@@ -1,0 +1,49 @@
+@Library('ci-lib') _   // Load your shared pipeline library
+
+pipeline {
+    agent any
+
+    environment {
+        AWS_REGION = 'us-east-1'
+        IMAGE_NAME = 'orders'
+        ECR_REPO = "443370713928.dkr.ecr.${AWS_REGION}.amazonaws.com/${IMAGE_NAME}"
+        CREDENTIALS_ID = 'aws-ecr-creds'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Trivy Scan') {
+            steps {
+                script {
+                    scanWithTrivy() // Provided by ci-lib/vars/scanWithTrivy.groovy
+                }
+            }
+        }
+
+        stage('Build & Push to ECR') {
+            steps {
+                script {
+                    pushToECR(
+                        imageName: "${IMAGE_NAME}",
+                        ecrRepo: "${ECR_REPO}",
+                        awsRegion: "${AWS_REGION}",
+                        credentialsId: "${CREDENTIALS_ID}"
+                    )
+                }
+            }
+        }
+
+        stage('Notify') {
+            steps {
+                script {
+                    notifySlack("Image pushed: ${ECR_REPO}")
+                }
+            }
+        }
+    }
+}
