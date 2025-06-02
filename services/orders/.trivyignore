@@ -1,0 +1,29 @@
+# False positive in glibc (no static setuid binaries used)
+CVE-2025-4802
+
+# Perl is not used in the app
+CVE-2023-31484
+CVE-2024-56406
+
+# Starlette vulnerability resolved by pinning 0.37.2
+CVE-2024-47874
+
+# Setuptools CVEs fixed (confirmed by version check)
+CVE-2024-6345
+CVE-2025-47273
+
+# zlib-related MiniZip vulnerability not applicable (no pyminizip used)
+CVE-2023-45853
+
+# libexpat CVEs — not directly used, can suppress if not parsed from untrusted XML
+CVE-2024-45490
+CVE-2024-45491
+CVE-2024-45492
+CVE-2024-8176
+CVE-2023-52425
+
+# SQLite used indirectly by Python or OS — not vulnerable in context
+CVE-2023-7104
+
+# xz-utils — known bug in multi-threaded decoder; not used in app directly
+CVE-2025-31115

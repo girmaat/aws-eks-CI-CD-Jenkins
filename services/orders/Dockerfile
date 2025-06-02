@@ -13,7 +13,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY requirements.txt .
 
-# Force upgrade pip & setuptools FIRST
+# Upgrade setuptools & install Python packages
 RUN pip install --upgrade pip "setuptools>=78.1.1" && \
     pip install --no-cache-dir -r requirements.txt
 
@@ -28,9 +28,12 @@ WORKDIR /app
 # Create and switch to non-root user
 RUN useradd -m appuser
 
-# Copy only the necessary runtime files
+# Copy runtime dependencies and app code
 COPY --from=builder /usr/local /usr/local
 COPY . .
+
+# ✅ Reconfirm correct setuptools version in final image
+RUN pip install --no-cache-dir --upgrade "setuptools>=78.1.1"
 
 RUN chown -R appuser:appuser /app
 USER appuser
