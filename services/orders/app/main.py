@@ -11,17 +11,29 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # ---------------------------
-# Middleware to limit payload size (e.g., prevent DoS from huge form-data)
+# Middleware to limit multipart/form-data payload size
 # ---------------------------
-class SizeLimitMiddleware(BaseHTTPMiddleware):
+class PayloadSizeLimitMiddleware(BaseHTTPMiddleware):
+    def __init__(self, app, max_size: int = 2 * 1024 * 1024):  # 2MB
+        super().__init__(app)
+        self.max_size = max_size
+
     async def dispatch(self, request: Request, call_next):
-        content_length = request.headers.get('content-length')
-        if content_length and int(content_length) > 2 * 1024 * 1024:  # 2MB limit
-            raise HTTPException(status_code=413, detail="Payload too large")
+        content_type = request.headers.get("content-type", "")
+        content_length = request.headers.get("content-length")
+
+        # Limit only multipart/form-data requests
+        if "multipart/form-data" in content_type.lower():
+            if content_length and int(content_length) > self.max_size:
+                raise HTTPException(
+                    status_code=413,
+                    detail="Multipart/form-data payload too large"
+                )
+
         return await call_next(request)
 
 # ---------------------------
-# Create the FastAPI app instance
+# Create FastAPI app instance
 # ---------------------------
 app = FastAPI(
     title="Orders Microservice",
@@ -29,22 +41,22 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Apply the size-limiting middleware
-app.add_middleware(SizeLimitMiddleware)
+# Apply the secure middleware
+app.add_middleware(PayloadSizeLimitMiddleware)
 
-# Setup CORS (adjust origins for production)
+# Setup CORS (adjust allow_origins in production)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Consider restricting in production
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Include API routes
+# Register application routes
 app.include_router(orders_router, prefix="/api/orders", tags=["Orders"])
 
-# Health check endpoint
+# Health check route
 @app.get("/health", tags=["Health"])
 async def health_check():
     return {"status": "ok"}
