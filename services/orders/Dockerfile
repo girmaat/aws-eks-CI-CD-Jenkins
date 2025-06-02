@@ -1,5 +1,5 @@
 # Stage 1 - Builder
-FROM python:3.11.9-slim@sha256:59a7878e7e8702177b603137ec6b34d78097d4de7f79070b030fbab1d3cc93c8 AS builder
+FROM python:3.11.9-slim@sha256:8fb099199b9f2d70342674bd9dbccd3ed03a258f26bbd1d556822c6dfc60c317 AS builder
 
 WORKDIR /app
 
@@ -13,7 +13,7 @@ COPY requirements.txt .
 RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
 
 # Stage 2 - Final
-FROM python:3.11.9-slim@sha256:59a7878e7e8702177b603137ec6b34d78097d4de7f79070b030fbab1d3cc93c8
+FROM python:3.11.9-slim@sha256:8fb099199b9f2d70342674bd9dbccd3ed03a258f26bbd1d556822c6dfc60c317
 
 WORKDIR /app
 
