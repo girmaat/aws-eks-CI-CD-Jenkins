@@ -13,4 +13,4 @@ pytest-cov==6.1.1
 coverage==7.5.1            
 
 # Security Fixes
-setuptools>=78.1.1         
+setuptools>=78.1.1
