@@ -1,34 +1,31 @@
-# Stage 1 - Builder
-FROM python:3.11-slim AS builder
+# Stage 1: Builder
+FROM python:3.12-slim as builder
 
-# Set non-root user early for best practice
-RUN useradd -m appuser
-
-# Set workdir and install build deps
 WORKDIR /app
+
+# System dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies
 COPY requirements.txt .
-RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
 
-# Stage 2 - Runtime
-FROM python:3.11-slim
+# Install Python dependencies
+RUN pip install --upgrade pip && pip install --prefix=/install -r requirements.txt
+
+# Stage 2: Final minimal image
+FROM python:3.12-slim
+
+# Non-root user for security
+RUN useradd -m appuser
+USER appuser
 
 WORKDIR /app
 
-# Create non-root user again in final stage
-RUN useradd -m appuser
-
-# Copy app code and dependencies from builder
-COPY --from=builder /usr/local /usr/local
-COPY . .
-
-# Set ownership and switch to non-root
-RUN chown -R appuser:appuser /app
-USER appuser
+COPY --from=builder /install /usr/local
+COPY ./app ./app
+COPY ./data ./data
 
 EXPOSE 8000
-CMD ["python", "app/main.py"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
