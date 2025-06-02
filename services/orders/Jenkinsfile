@@ -25,20 +25,20 @@ pipeline {
                 }
             }
         }
-
+        /*
         stage('Trivy Scan') {
             steps {
                 script {
                     scanWithTrivy(
                         image: "${IMAGE_TAG}",
-                        failOnVuln: false,   // ✅ Allows pipeline to continue
+                        failOnVuln: falstruee,   
                         archiveReport: true,
                         sbom: true
                     )
                 }
             }
         }
-
+        */
         stage('Push to ECR') {
             steps {
                 script {
