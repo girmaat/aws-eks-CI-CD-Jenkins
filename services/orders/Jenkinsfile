@@ -82,18 +82,18 @@ pipeline {
                     archiveArtifacts artifacts: 'coverage.xml', fingerprint: true
                 }
             }
-        }
+        }*/
     }
-    */
+    
     post {
         always {
-            echo '🌀 CI/CD process completed.'
+            echo 'CI/CD process completed.'
         }
         success {
-            echo "✅ Build & Push succeeded for image: ${IMAGE_TAG}"
+            echo "Build & Push succeeded for image: ${IMAGE_TAG}"
         }
         failure {
-            echo "❌ Pipeline failed. Check logs above."
+            echo "Pipeline failed. Check logs above."
         }
     }
 }
