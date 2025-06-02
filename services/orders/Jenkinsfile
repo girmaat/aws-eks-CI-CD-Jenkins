@@ -1,14 +1,14 @@
-@Library('ci-lib') _  // Shared Jenkins Shared Library
+@Library('ci-lib') _
 
 pipeline {
     agent any
 
     environment {
-        AWS_REGION = 'us-east-1'
+        AWS_REGION     = 'us-east-1'
         AWS_ACCOUNT_ID = '443370713928'
-        ECR_REPO = 'services/orders'
-        COMMIT_HASH = "${env.GIT_COMMIT ?: 'dev'}"
-        IMAGE_TAG = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}:${COMMIT_HASH}"
+        ECR_REPO       = 'services/orders'
+        COMMIT_HASH    = "${env.GIT_COMMIT ?: 'dev'}"
+        IMAGE_TAG      = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}:${COMMIT_HASH}"
     }
 
     stages {
@@ -28,25 +28,35 @@ pipeline {
         /*
         stage('Trivy Scan') {
             steps {
-                script {
-                    scanWithTrivy(
-                        image: "${IMAGE_TAG}",
-                        failOnVuln: falstruee,   
-                        archiveReport: true,
-                        sbom: true
-                    )
+                dir('services/orders') {
+                    script {
+                        try {
+                            scanWithTrivy(
+                                image: "${IMAGE_TAG}",
+                                failOnVuln: false,       // Allow pipeline to continue
+                                archiveReport: true,
+                                sbom: true
+                            )
+                        } catch (Exception e) {
+                            echo "⚠️ Trivy scan failed. See: ${env.BUILD_URL}artifact/trivy-report.html"
+                            echo "⚠️ Trivy scan had issues, but continuing pipeline."
+                        }
+                    }
                 }
             }
         }
         */
         stage('Push to ECR') {
             steps {
-                script {
-                    pushToECR(
-                        region: "${AWS_REGION}",
-                        image: "${IMAGE_TAG}",
-                        accountId: "${AWS_ACCOUNT_ID}"
-                    )
+                dir('services/orders') {
+                    sh """
+                        echo "🔐 Logging into ECR..."
+                        aws ecr get-login-password --region ${AWS_REGION} | \
+                        docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
+
+                        echo "📦 Pushing image: ${IMAGE_TAG}"
+                        docker push ${IMAGE_TAG}
+                    """
                 }
             }
         }
@@ -64,7 +74,6 @@ pipeline {
                 }
             }
         }
-        */
 
         stage('Archive Reports') {
             steps {
@@ -75,10 +84,10 @@ pipeline {
             }
         }
     }
-
+    */
     post {
         always {
-            echo 'CI/CD process completed.'
+            echo '🌀 CI/CD process completed.'
         }
         success {
             echo "✅ Build & Push succeeded for image: ${IMAGE_TAG}"
