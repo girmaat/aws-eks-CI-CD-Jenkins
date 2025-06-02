@@ -13,8 +13,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY requirements.txt .
 
-# Install Python packages
-RUN pip install --upgrade pip && \
+# Force upgrade pip & setuptools FIRST
+RUN pip install --upgrade pip setuptools>=78.1.1 && \
     pip install --no-cache-dir -r requirements.txt
 
 # ---------------------
