@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential curl && \
     rm -rf /var/lib/apt/lists/*
 
-COPY requirements-1.txt .
+COPY requirements.txt .
 
 # Force upgrade pip & setuptools FIRST
 RUN pip install --upgrade pip "setuptools>=78.1.1" && \
