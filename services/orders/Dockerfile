@@ -1,31 +1,30 @@
-# Stage 1: Builder
-FROM python:3.12-slim as builder
+# Stage 1 - Builder
+FROM python:3.11.9-slim@sha256:59a7878e7e8702177b603137ec6b34d78097d4de7f79070b030fbab1d3cc93c8 AS builder
 
 WORKDIR /app
 
-# System dependencies
+# Set up build environment
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
+    build-essential curl && \
+    rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
 
-# Install Python dependencies
-RUN pip install --upgrade pip && pip install --prefix=/install -r requirements.txt
+RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
 
-# Stage 2: Final minimal image
-FROM python:3.12-slim
-
-# Non-root user for security
-RUN useradd -m appuser
-USER appuser
+# Stage 2 - Final
+FROM python:3.11.9-slim@sha256:59a7878e7e8702177b603137ec6b34d78097d4de7f79070b030fbab1d3cc93c8
 
 WORKDIR /app
 
-COPY --from=builder /install /usr/local
-COPY ./app ./app
-COPY ./data ./data
+RUN useradd -m appuser
+
+# Copy from builder
+COPY --from=builder /usr/local /usr/local
+COPY . .
+
+RUN chown -R appuser:appuser /app
+USER appuser
 
 EXPOSE 8000
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["python", "app/main.py"]
