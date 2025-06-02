@@ -21,10 +21,17 @@ pipeline {
         stage('Build Image') {
             steps {
                 dir('services/orders') {
-                    sh "docker build -t ${IMAGE_TAG} ."
+                    sh "docker build --no-cache -t ${IMAGE_TAG} ."
                 }
             }
         }
+
+        stage('Debug Installed Packages') {
+            steps {
+                sh "docker run --rm ${IMAGE_TAG} python -m pip show setuptools starlette"
+            }
+        }
+
 
         stage('Trivy Scan') {
             steps {
