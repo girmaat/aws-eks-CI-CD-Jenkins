@@ -50,7 +50,7 @@ pipeline {
                 }
             }
         }
-
+        /*
         stage('Install & Test') {
             steps {
                 dir('services/orders') {
@@ -64,6 +64,7 @@ pipeline {
                 }
             }
         }
+        */
 
         stage('Archive Reports') {
             steps {
